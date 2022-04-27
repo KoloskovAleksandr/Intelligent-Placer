@@ -34,7 +34,7 @@ def outbreeding(selection):
 #The packing position search algorithm is based on the genetic algorithm
 class GeneticPacking:
     #  bound_contour - bounding polygon vertex sequence (requires convexity and connectivity)
-    def __init__(self, bound_contour):
+    def __init__(self, bound_contour, work_info=False):
         reshaped = bound_contour.reshape(-1, 2)
         # Introduced heuristic - circumscribe a bounding box (below, BOX) around the original polygon
         x, y, w, h = cv.boundingRect(reshaped)
@@ -71,9 +71,11 @@ class GeneticPacking:
 
         self.__rng = np.random.default_rng()
 
+        self.__work_info = work_info
+
     # packing function
     # contours - description array of objects (sequence of vertices)
-    def pack(self, contours, epsilon=10**-1):
+    def pack(self, contours, epsilon=10**-2):
         # calculation of the total area of objects
         self.__set_contours(contours)
 
@@ -82,6 +84,12 @@ class GeneticPacking:
         for i in range(self.__max_iter):
             self.__update_scores()
             max_score = np.max(self.__scores)
+
+            if self.__work_info is True:
+                self.__obj_function(self.__population[np.argmax(self.__scores)])
+                plt.imshow(self.__fill_mask, cmap='gray')
+                plt.title("Best packing at " + str(i) + "th iteration")
+                plt.show()
 
             if max_score > 1.0 - epsilon:
                 return True
